@@ -85,6 +85,28 @@ function mapToInputSourceMap(
     });
 }
 
+function makeSourceMap(
+    sourceMapText: string | undefined,
+    outputText: string,
+    filePath: string,
+    contents: string,
+    loaderContext: LoaderContext<LoaderOptions>
+) {
+    if (sourceMapText === undefined) {
+        return { output: outputText, sourceMap: undefined };
+    }
+
+    return {
+        output: outputText.replace(/^\/\/# sourceMappingURL=[^\r\n]*/gm, ''),
+        sourceMap: Object.assign(JSON.parse(sourceMapText), {
+            sources: [loaderContext.remainingRequest],
+            file: filePath,
+            sourcesContent: [contents],
+        }),
+    };
+}
+
+
 /**
  * JavaScript Obfuscator loader based on `obfuscator-loader` package
  */
@@ -97,7 +119,7 @@ function Loader(this: LoaderContext<LoaderOptions>, sourceCode: string, inputSou
 
     // Obfuscates commented source code
     const options = loaderUtils.getOptions<WebpackObfuscatorOptions>(context as { query: string }) || {};
-    const { obfuscatedSource, obfuscationSourceMap } = JavaScriptObfuscator.obfuscate(
+    const obfuscateResult = JavaScriptObfuscator.obfuscate(
         sourceCode,
         {
             ...options,
@@ -107,14 +129,23 @@ function Loader(this: LoaderContext<LoaderOptions>, sourceCode: string, inputSou
         }
     );
 
-    if (obfuscationSourceMap === undefined || !inputSourceMap) {
-        callback(null, obfuscatedSource, obfuscationSourceMap);
+    const [obfuscatedSource, obfuscationSourceMap] = [obfuscateResult.getObfuscatedCode(), obfuscateResult.getSourceMap()];
+    const { sourceMap, output } = makeSourceMap(
+        obfuscationSourceMap,
+        obfuscatedSource,
+        path.normalize(context.resourcePath),
+        sourceCode,
+        context
+    );
+
+    if (sourceMap === undefined || !inputSourceMap) {
+        callback(null, output, sourceMap);
         return;
     }
 
-    mapToInputSourceMap(obfuscationSourceMap, context, inputSourceMap as RawSourceMap)
+    mapToInputSourceMap(sourceMap, context, inputSourceMap as RawSourceMap)
         .then(mappedSourceMap => {
-            callback(null, obfuscatedSource, mappedSourceMap);
+            callback(null, output, mappedSourceMap);
         })
         .catch((e: Error) => {
             callback(e);
