@@ -96,7 +96,7 @@ function Loader(this: LoaderContext<LoaderOptions>, sourceCode: string, inputSou
     const callback = this.async()
 
     // Obfuscates commented source code
-    const options = loaderUtils.getOptions<WebpackObfuscatorOptions>(context) || {};
+    const options = loaderUtils.getOptions<WebpackObfuscatorOptions>({ query: context.query.toString() }) || {};
     const { obfuscatedSource, obfuscationSourceMap } = JavaScriptObfuscator.obfuscate(
         sourceCode,
         {
