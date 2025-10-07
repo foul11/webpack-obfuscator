@@ -49,7 +49,7 @@ function mapToInputSourceMap(sourceMap, loaderContext, inputSourceMap) {
                 source_map_1.SourceMapGenerator.prototype._validateMapping = validator;
                 generator.applySourceMap(sourceMapConsumers[0]);
                 const mappedSourceMap = generator.toJSON();
-                sourceMapConsumers.forEach(sourceMapConsumer => sourceMapConsumer.destroy());
+                sourceMapConsumers.forEach(sourceMapConsumer => { var _a; return (_a = sourceMapConsumer === null || sourceMapConsumer === void 0 ? void 0 : sourceMapConsumer.destroy) === null || _a === void 0 ? void 0 : _a.call(sourceMapConsumer); });
                 resolve(mappedSourceMap);
             }
             catch (e) {

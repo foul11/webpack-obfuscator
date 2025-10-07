@@ -73,7 +73,7 @@ function mapToInputSourceMap(
 
                     // before resolving, we free memory by calling destroy on the source map consumers
                     sourceMapConsumers.forEach(sourceMapConsumer =>
-                        sourceMapConsumer.destroy()
+                        sourceMapConsumer?.destroy?.()
                     );
                     resolve(mappedSourceMap);
                 } catch (e) {
