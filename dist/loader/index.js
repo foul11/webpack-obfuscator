@@ -43,23 +43,10 @@ function mapToInputSourceMap(sourceMap, loaderContext, inputSourceMap) {
         ])
             .then(sourceMapConsumers => {
             try {
-                sourceMapConsumers[1].eachMapping(mapping => {
-                    const newMapping = {
-                        source: mapping.source,
-                        generated: {
-                            line: mapping.generatedLine,
-                            column: mapping.generatedColumn,
-                        }
-                    };
-                    if (typeof mapping.originalLine === 'number' && typeof mapping.originalColumn === 'number') {
-                        newMapping.original = { line: mapping.originalLine, column: mapping.originalColumn };
-                    }
-                    if (mapping.name) {
-                        newMapping.name = mapping.name;
-                    }
-                    generator.addMapping(newMapping);
-                });
+                const validator = source_map_1.SourceMapGenerator.prototype._validateMapping;
+                source_map_1.SourceMapGenerator.prototype._validateMapping = () => undefined;
                 const generator = source_map_1.SourceMapGenerator.fromSourceMap(sourceMapConsumers[1]);
+                source_map_1.SourceMapGenerator.prototype._validateMapping = validator;
                 generator.applySourceMap(sourceMapConsumers[0]);
                 const mappedSourceMap = generator.toJSON();
                 sourceMapConsumers.forEach(sourceMapConsumer => sourceMapConsumer.destroy());
