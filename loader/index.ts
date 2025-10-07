@@ -62,6 +62,26 @@ function mapToInputSourceMap(
         ])
             .then(sourceMapConsumers => {
                 try {
+                    sourceMapConsumers[1].eachMapping(mapping => {
+                        const newMapping: any = {
+                            source: mapping.source,
+                            generated: {
+                                line: mapping.generatedLine,
+                                column: mapping.generatedColumn,
+                            }
+                        };
+                        
+                        if (typeof mapping.originalLine === 'number' && typeof mapping.originalColumn === 'number') {
+                            newMapping.original = { line: mapping.originalLine, column: mapping.originalColumn };
+                        }
+                        
+                        if (mapping.name) {
+                            newMapping.name = mapping.name;
+                        }
+                        
+                        generator.addMapping(newMapping);
+                    });
+                    
                     const generator = SourceMapGenerator.fromSourceMap(
                         sourceMapConsumers[1]
                     );
@@ -76,7 +96,7 @@ function mapToInputSourceMap(
                 } catch (e) {
                     //before rejecting, we free memory by calling destroy on the source map consumers
                     sourceMapConsumers.forEach(sourceMapConsumer =>
-                        sourceMapConsumer.destroy()
+                        sourceMapConsumer?.destroy?.()
                     );
                     reject(e);
                 }

@@ -43,6 +43,22 @@ function mapToInputSourceMap(sourceMap, loaderContext, inputSourceMap) {
         ])
             .then(sourceMapConsumers => {
             try {
+                sourceMapConsumers[1].eachMapping(mapping => {
+                    const newMapping = {
+                        source: mapping.source,
+                        generated: {
+                            line: mapping.generatedLine,
+                            column: mapping.generatedColumn,
+                        }
+                    };
+                    if (typeof mapping.originalLine === 'number' && typeof mapping.originalColumn === 'number') {
+                        newMapping.original = { line: mapping.originalLine, column: mapping.originalColumn };
+                    }
+                    if (mapping.name) {
+                        newMapping.name = mapping.name;
+                    }
+                    generator.addMapping(newMapping);
+                });
                 const generator = source_map_1.SourceMapGenerator.fromSourceMap(sourceMapConsumers[1]);
                 generator.applySourceMap(sourceMapConsumers[0]);
                 const mappedSourceMap = generator.toJSON();
@@ -50,7 +66,7 @@ function mapToInputSourceMap(sourceMap, loaderContext, inputSourceMap) {
                 resolve(mappedSourceMap);
             }
             catch (e) {
-                sourceMapConsumers.forEach(sourceMapConsumer => sourceMapConsumer.destroy());
+                sourceMapConsumers.forEach(sourceMapConsumer => { var _a; return (_a = sourceMapConsumer === null || sourceMapConsumer === void 0 ? void 0 : sourceMapConsumer.destroy) === null || _a === void 0 ? void 0 : _a.call(sourceMapConsumer); });
                 reject(e);
             }
         })
